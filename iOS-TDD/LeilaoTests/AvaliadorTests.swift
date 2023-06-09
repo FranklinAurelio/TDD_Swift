@@ -9,8 +9,17 @@ import XCTest
 @testable import Leilao
 
 final class AvaliadorTests: XCTestCase {
+    
+    private var joao:Usuario!
+    private var jose:Usuario!
+    private var maria:Usuario!
+    private var leiloeiro: Avaliador!
 
     override func setUpWithError() throws {
+        joao = Usuario(nome: "Joao")
+        jose = Usuario(nome: "Jose")
+        maria = Usuario(nome: "Maria")
+        leiloeiro = Avaliador()
     }
 
     override func tearDownWithError() throws {
@@ -22,19 +31,13 @@ final class AvaliadorTests: XCTestCase {
     }
     
     func testCanKnowBidInAscendingOrder(){
-        let joao = Usuario(nome: "Joao")
-        let jose = Usuario(nome: "Jose")
-        let maria = Usuario(nome: "Maria")
-        
         let leilao = Leilao(descricao: "Playstation 4")
         leilao.propoe(lance: Lance(maria, 250.0))
         leilao.propoe(lance: Lance(joao, 300.0))
         leilao.propoe(lance: Lance(jose, 400.0))
         
         // Acao
-        
-        let leiloeiro = Avaliador()
-        leiloeiro.avalia(leilao: leilao)
+        try? leiloeiro.avalia(leilao: leilao)
         
         // Validacao
         
@@ -43,19 +46,13 @@ final class AvaliadorTests: XCTestCase {
     }
     
     func testCanKnowBidAscendingOrderWithDynamicValues(){
-        let joao = Usuario(nome: "Joao")
-        let jose = Usuario(nome: "Jose")
-        let maria = Usuario(nome: "Maria")
-        
         let leilao = Leilao(descricao: "Playstation 4")
         leilao.propoe(lance: Lance(maria, 1000.0))
         leilao.propoe(lance: Lance(joao, 1200.0))
         leilao.propoe(lance: Lance(jose, 3000.0))
         
         // Acao
-        
-        let leiloeiro = Avaliador()
-        leiloeiro.avalia(leilao: leilao)
+        try? leiloeiro.avalia(leilao: leilao)
         
         // Validacao
         
@@ -64,33 +61,28 @@ final class AvaliadorTests: XCTestCase {
     }
     
     func testCanKnowOrderWithOneBid(){
-        let joao = Usuario(nome: "João")
-        
         let leilao = Leilao(descricao: "Apple watch")
         leilao.propoe(lance: Lance(joao, 1800.0))
         
-        let leiloeiro = Avaliador()
-        leiloeiro.avalia(leilao: leilao)
+        
+        try? leiloeiro.avalia(leilao: leilao)
         
         XCTAssertEqual(1800.0, leiloeiro.maiorLance())
         XCTAssertEqual(1800.0, leiloeiro.menorLance())
     }
     
     func testFindThreeBiggerBid(){
-        let joao = Usuario(nome: "Joao")
-        let maria = Usuario(nome: "Maria")
+
+        let leilao = Creator().para(descricao: "MacBook pro M2")
+            .lance(maria, 1000.0)
+            .lance(joao,1200.0)
+            .lance(maria, 1300.0)
+            .lance(joao,1400.0)
+            .lance(maria, 1800.0)
+            .lance(joao,2000.0).constroi()
         
-        let leilao = Leilao(descricao: "MacBook pro M2")
         
-        leilao.propoe(lance: Lance(maria, 1000.0))
-        leilao.propoe(lance: Lance(joao, 1200.0))
-        leilao.propoe(lance: Lance(maria, 1300.0))
-        leilao.propoe(lance: Lance(joao, 1400.0))
-        leilao.propoe(lance: Lance(maria, 1800.0))
-        leilao.propoe(lance: Lance(joao, 2000.0))
-        
-        let leiloeiro = Avaliador()
-        leiloeiro.avalia(leilao: leilao)
+        try? leiloeiro.avalia(leilao: leilao)
         
         let listBid = leiloeiro.getTheThreeBestBidInAscendingOrderPublic()
         
@@ -100,4 +92,12 @@ final class AvaliadorTests: XCTestCase {
         XCTAssertEqual(1400.0, listBid[2].valor)
     }
 
+    func testMustIgnoreLeilaoVoid(){
+        let leilao  = Creator().para(descricao: "Apple Watch").constroi()
+      
+            XCTAssertThrowsError(try leiloeiro.avalia(leilao: leilao), "Não é possivel avaliar um leilao sem lances"){
+                error in
+                print(error.localizedDescription)
+            }
+    }
 }
